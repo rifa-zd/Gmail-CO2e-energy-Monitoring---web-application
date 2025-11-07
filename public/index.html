@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gmail Energy Footprint Monitor</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'><text y='20' font-size='20'>🌱</text></svg>">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: #2d3748;
+            margin-bottom: 40px;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            color: #51cf66;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            color: #718096;
+        }
+
+        .auth-section {
+            text-align: center;
+            padding: 60px 40px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .auth-section h2 {
+            font-size: 2em;
+            margin-bottom: 20px;
+            color: #2d3748;
+        }
+
+        .auth-section p {
+            font-size: 1.1em;
+            color: #718096;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .login-btn, .refresh-btn, .export-btn, .clear-btn {
+            padding: 15px 35px;
+            font-size: 1.1em;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            margin: 5px;
+        }
+
+        .login-btn {
+            background: #51cf66;
+            color: white;
+        }
+
+        .login-btn:hover {
+            background: #40c057;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(81, 207, 102, 0.3);
+        }
+
+        .refresh-btn {
+            background: #51cf66;
+            color: white;
+        }
+
+        .refresh-btn:hover {
+            background: #40c057;
+        }
+
+        .export-btn {
+            background: #4c6ef5;
+            color: white;
+        }
+
+        .export-btn:hover {
+            background: #3b5bdb;
+        }
+
+        .clear-btn {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        .clear-btn:hover {
+            background: #fa5252;
+        }
+
+        .login-disclaimer {
+            font-size: 0.85em;
+            color: #999;
+            margin-top: 25px;
+            line-height: 1.5;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+
+        .dashboard {
+            display: none;
+        }
+
+        .controls {
+            text-align: right;
+            margin-bottom: 20px;
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .metric-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border-left: 5px solid #51cf66;
+            transition: transform 0.3s ease;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .metric-card h3 {
+            color: #718096;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+        }
+
+        .metric-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #51cf66;
+            margin: 10px 0;
+        }
+
+        .metric-unit {
+            color: #999;
+            font-size: 0.9em;
+            margin-left: 5px;
+        }
+
+        .chart-section {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+        }
+
+        .chart-section h2 {
+            color: #2d3748;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .chart-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+
+        .breakdown-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .breakdown-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .breakdown-card h3 {
+            color: #2d3748;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .breakdown-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .breakdown-item:last-child {
+            border-bottom: none;
+        }
+
+        .breakdown-label {
+            color: #718096;
+            font-size: 1em;
+        }
+
+        .breakdown-value {
+            font-weight: bold;
+            color: #51cf66;
+            font-size: 1.1em;
+        }
+
+        .tips-section {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+        }
+
+        .tips-section h2 {
+            color: #2d3748;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .tip-item {
+            padding: 15px;
+            margin-bottom: 12px;
+            background: #f0fdf4;
+            border-left: 4px solid #51cf66;
+            border-radius: 8px;
+            font-size: 1em;
+            line-height: 1.6;
+            color: #2d3748;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px;
+            color: #2d3748;
+            font-size: 1.5em;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .loading::after {
+            content: '...';
+            animation: dots 1.5s steps(4, end) infinite;
+        }
+
+        @keyframes dots {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60%, 100% { content: '...'; }
+        }
+
+        .last-sync {
+            color: #718096;
+            font-size: 0.9em;
+            margin-top: 20px;
+            text-align: center;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        @media (max-width: 768px) {
+            .chart-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .breakdown-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 1.8em;
+            }
+        }
+    </style>
+
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Gmail Energy Footprint Monitor</h1>
+            <p>Track and reduce the environmental impact of your email usage</p>
+        </div>
+
+        <!-- Auth Section -->
+        <div id="authSection" class="auth-section">
+            <h2>Welcome to Gmail Energy Monitor</h2>
+            <p>Start monitoring your email's carbon footprint and discover ways to reduce your environmental impact.</p>
+            <p style="margin-top: 20px;">Every email uses energy. Let's make yours count!</p>
+            <button id="loginBtn" class="login-btn">Login with Gmail</button>
+            <p class="login-disclaimer">
+                <strong>Privacy First:</strong> We only access email metadata (sender, recipient, size, timestamp). 
+                Your email content is never read or stored. All data is encrypted and stays private.
+            </p>
+        </div>
+
+        <!-- Dashboard -->
+        <div id="dashboard" class="dashboard">
+            <div class="controls">
+                <button id="refreshBtn" class="refresh-btn">Refresh Data/button>
+                <button id="exportBtn" class="export-btn">Export Data</button>
+                <button id="clearBtn" class="clear-btn">Clear All Data</button>
+            </div>
+
+            <div id="loading" class="loading">
+                Loading your data
+            </div>
+
+            <div id="content" style="display:none;">
+                <!-- Main Metrics -->
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <h3>Total Energy Used</h3>
+                        <div class="metric-value"><span id="totalEnergy">0</span><span class="metric-unit">Wh</span></div>
+                        <p style="font-size: 0.85em; color: #999; margin-top: 10px;">Equivalent to charging a smartphone</p>
+                    </div>
+                    <div class="metric-card">
+                        <h3>CO₂ Equivalent</h3>
+                        <div class="metric-value"><span id="totalCO2">0</span><span class="metric-unit">kg</span></div>
+                        <p style="font-size: 0.85em; color: #999; margin-top: 10px;">Carbon emissions from your emails</p>
+                    </div>
+                    <div class="metric-card">
+                        <h3>Emails Processed</h3>
+                        <div class="metric-value"><span id="emailCount">0</span><span class="metric-unit">emails</span></div>
+                        <p style="font-size: 0.85em; color: #999; margin-top: 10px;">Total monitored emails</p>
+                    </div>
+                    <div class="metric-card">
+                        <h3>Data Transferred</h3>
+                        <div class="metric-value"><span id="totalData">0</span><span class="metric-unit">MB</span></div>
+                        <p style="font-size: 0.85em; color: #999; margin-top: 10px;">Total data processed</p>
+                    </div>
+                </div>
+
+                <!-- 24-Hour Charts -->
+                <div class="chart-section">
+                    <h2>Today's Activity (24 Hours)</h2>
+                    <div class="chart-grid">
+                        <div>
+                            <h3 style="text-align: center; margin-bottom: 15px; color: #51cf66;">Energy Usage</h3>
+                            <div class="chart-container">
+                                <canvas id="hourlyEnergyChart"></canvas>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 style="text-align: center; margin-bottom: 15px; color: #51cf66;">CO₂ Emissions</h3>
+                            <div class="chart-container">
+                                <canvas id="hourlyCO2Chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 15-Day Charts -->
+                <div class="chart-section">
+                    <h2>15-Day Trend</h2>
+                    <div class="chart-grid">
+                        <div>
+                            <h3 style="text-align: center; margin-bottom: 15px; color: #51cf66;">Energy by Day</h3>
+                            <div class="chart-container">
+                                <canvas id="dailyEnergyChart"></canvas>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 style="text-align: center; margin-bottom: 15px; color: #51cf66;">CO₂ by Day</h3>
+                            <div class="chart-container">
+                                <canvas id="dailyCO2Chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Breakdown Stats -->
+                <div class="breakdown-grid">
+                    <div class="breakdown-card">
+                        <h3>Email Breakdown</h3>
+                        <div class="breakdown-item">
+                            <span class="breakdown-label">Inbox Emails</span>
+                            <span class="breakdown-value"><span id="inboxCount">0</span></span>
+                        </div>
+                        <div class="breakdown-item">
+                            <span class="breakdown-label">Sent Emails</span>
+                            <span class="breakdown-value"><span id="sentCount">0</span></span>
+                        </div>
+                        <div class="breakdown-item">
+                            <span class="breakdown-label">📎 With Attachments</span>
+                            <span class="breakdown-value"><span id="attachmentCount">0</span></span>
+                        </div>
+                    </div>
+
+                    <div class="breakdown-card">
+                        <h3>Data Distribution</h3>
+                        <div class="breakdown-item">
+                            <span class="breakdown-label">Email Bodies</span>
+                            <span class="breakdown-value"><span id="emailBodySize">0</span> MB</span>
+                        </div>
+                        <div class="breakdown-item">
+                            <span class="breakdown-label">📎 Attachments</span>
+                            <span class="breakdown-value"><span id="attachmentSize">0</span> MB</span>
+                        </div>
+                        <div class="breakdown-item">
+                            <span class="breakdown-label">Avg Email Size</span>
+                            <span class="breakdown-value"><span id="avgEmailSize">0</span> KB</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Optimization Tips -->
+                <div class="tips-section">
+                    <h2>Personalized Optimization Tips</h2>
+                    <div id="tipsList"></div>
+                </div>
+
+                <div class="last-sync">
+                    Last updated: <strong><span id="lastSync">Never</span></strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase & Chart.js -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-functions-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+
+    
+    <script src="config.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

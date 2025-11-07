@@ -1,0 +1,9 @@
+{
+  "date": "2025-10-26",
+  "emailsProcessed": 123,
+  "totalKB": 20480,
+  "totalWh": 6.144,
+  "totalKwh": 0.006144,
+  "totalKgCO2": 0.001431552,
+  "breakdown": {"inboxKB": 10240, "sentKB": 5120, "attachmentsKB": 5120}
+}
