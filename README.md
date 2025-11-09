@@ -4,3 +4,5 @@ Similar features as Gmail Energy Monitoring - browser extension (https://github.
 - Node.js (LTS - 18, 22 but 22 prefered)
 - Firebase Account
 - Google Cloud Account
+
+(project in testing)
